@@ -14,7 +14,7 @@ includelib \masm32\lib\user32.lib
 includelib \masm32\lib\debug.lib
 
 .data?
-    outputBuffer        db 1024 dup (?)
+    outputBuffer        db 2048 dup (?)
     tempNumerator       dt ?        ; Проміжний результат чисельника (long double)
     tempDenominator     dt ?        ; Проміжний результат знаменника (long double)
     resultDouble        dq ?        ; Кінцевий результат (double)
@@ -33,6 +33,10 @@ includelib \masm32\lib\debug.lib
                  "Value of b: %s", 10,
                  "Value of c: %s", 10,
                  "Value of d: %s", 10, 10,
+                 "Formula with values:", 10,
+                 "(ln(%s + 4*%s) - 1)", 10,
+                 "------------------------", 10,
+                 "(3*%s - 2*%s)", 10, 10,
                  "Result: %s", 0
     zeroDenominatorMsg db "Error: Division by zero (3*b - 2*d = 0)", 0
     logErrorMsg db "Error: Invalid logarithm argument (a + 4*c <= 0)", 0
@@ -127,7 +131,10 @@ log_ok:
     invoke FloatToStr2, [resultDouble], addr strResult
 
     invoke wsprintf, addr outputBuffer, addr messageFormat,
-        addr strA, addr strB, addr strC, addr strD, addr strResult
+        addr strA, addr strB, addr strC, addr strD,
+        addr strA, addr strC,        ; Для формули: ln(a + 4*c)
+        addr strB, addr strD,        ; Для формули: 3*b - 2*d
+        addr strResult
 
     jmp showResult
 
@@ -145,17 +152,26 @@ check_errors:
 
     ; Якщо обидві помилки
     invoke wsprintf, addr outputBuffer, addr messageFormat,
-        addr strA, addr strB, addr strC, addr strD, addr bothErrorsMsg
+        addr strA, addr strB, addr strC, addr strD,
+        addr strA, addr strC,
+        addr strB, addr strD,
+        addr bothErrorsMsg
     jmp showResult
 
 denominator_error_only:
     invoke wsprintf, addr outputBuffer, addr messageFormat,
-        addr strA, addr strB, addr strC, addr strD, addr zeroDenominatorMsg
+        addr strA, addr strB, addr strC, addr strD,
+        addr strA, addr strC,
+        addr strB, addr strD,
+        addr zeroDenominatorMsg
     jmp showResult
 
 log_error_only:
     invoke wsprintf, addr outputBuffer, addr messageFormat,
-        addr strA, addr strB, addr strC, addr strD, addr logErrorMsg
+        addr strA, addr strB, addr strC, addr strD,
+        addr strA, addr strC,
+        addr strB, addr strD,
+        addr logErrorMsg
 
 showResult:
     invoke MessageBox, 0, addr outputBuffer, addr windowTitle, MB_OK
