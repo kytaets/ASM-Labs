@@ -1,0 +1,12 @@
+MASM32:
+ml /c /coff my_program.asm
+\masm32\bin\polink /SUBSYSTEM:WINDOWS my_program.obj
+
+ml /c /Zd /coff mycode.asm
+link /SUBSYSTEM:WINDOWS mycode.obj
+
+MASM64:
+ml64.exe /c /Fo lab1_64.obj lab1_64.asm
+link /subsystem:windows /ENTRY:WinMain /out:lab1_64.exe lab1_64.obj
+
+
