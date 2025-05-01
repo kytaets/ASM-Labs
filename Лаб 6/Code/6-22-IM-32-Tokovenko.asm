@@ -20,7 +20,7 @@ includelib \masm32\lib\debug.lib
     logValid           dd ?    ; Прапорець валідності логарифма
     
 .data
-    inputA dq 2.5, 1.5, 0.5, 0.1, 7.5, -1.0
+    inputA dq 2.5, 1.5, 0.5, 0.1, 7.5, -1.1
     inputB dq 1.2, 3.5, 2.5, 0.7, 2.2, 2.1
     inputC dq 0.8, 2.6, 0.1, 0.3, 9.6, 0.25
     inputD dq 0.4, 6.3, 0.6, 5.5, 3.3, 3.7
@@ -43,10 +43,11 @@ includelib \masm32\lib\debug.lib
     strD db 64 dup(?)
     strResult db 64 dup(?)
 
-    one    real8 1.0
-    two    real8 2.0
-    three  real8 3.0
-    four   real8 4.0
+    one      real8 1.0
+    two      real8 2.0
+    three    real8 3.0
+    four     real8 4.0
+    epsilon  real8 1.0e-10  ; Мале значення для порівняння з нулем
 
 .code
 start:
@@ -64,27 +65,39 @@ calculationLoop:
     fmul [two]                        ; 2*d, 3*b
     fsubp st(1), st(0)                ; 3*b - 2*d
     
-    ; Перевірка знаменника на 0
-    ftst
+    ; Перевірка знаменника на 0 (з урахуванням epsilon)
+    fabs                              ; Беремо модуль значення
+    fcomp [epsilon]                   ; Порівнюємо з epsilon
     fstsw ax
     sahf
-    jnz denominator_ok
-    mov [denominatorValid], 0         ; Позначили невалідним
+    jb denominator_zero               ; Якщо менше epsilon - вважаємо нулем
     
 denominator_ok:
-    ; Збереження знаменника (навіть якщо 0)
-    fstp qword ptr [tempDouble]
+    ; Якщо знаменник не нуль, завантажуємо його знову
+    fld qword ptr [inputB + 8*esi]    ; b
+    fmul [three]                      ; 3*b
+    fld qword ptr [inputD + 8*esi]    ; d, 3*b
+    fmul [two]                        ; 2*d, 3*b
+    fsubp st(1), st(0)                ; 3*b - 2*d
+    fstp qword ptr [tempDouble]       ; Зберігаємо знаменник
+    jmp check_numerator
     
-    ; Обчислення чисельника (ln(a + 4*c) - 1)
+denominator_zero:
+    mov [denominatorValid], 0         ; Позначили невалідним
+    fstp st(0)                        ; Очищаємо стек FPU
+    
+check_numerator:
+    ; Обчислення аргументу логарифма (a + 4*c)
     fld qword ptr [inputC + 8*esi]    ; c
     fmul [four]                       ; 4*c
     fadd qword ptr [inputA + 8*esi]   ; a + 4*c
     
-    ; Перевірка аргументу логарифма
+    ; Перевірка аргументу логарифма (a + 4*c > 0)
     ftst
     fstsw ax
     sahf
-    ja log_ok
+    ja log_ok                         ; Якщо > 0, все добре
+    
     mov [logValid], 0                 ; Позначили невалідним
     
 log_ok:
