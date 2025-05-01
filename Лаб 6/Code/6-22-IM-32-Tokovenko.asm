@@ -14,169 +14,161 @@ includelib \masm32\lib\user32.lib
 includelib \masm32\lib\debug.lib
 
 .data?
-    outputBuffer        db 2048 dup (?)
-    tempNumerator       dt ?        ; Проміжний результат чисельника (long double)
-    tempDenominator     dt ?        ; Проміжний результат знаменника (long double)
-    resultDouble        dq ?        ; Кінцевий результат (double)
-    denominatorValid    dd ?
-    logValid            dd ?
+    kytaecVVTok32_outputBuffer        db 2048 dup (?)
+    kytaecVVTok32_tempNumerator       dt ?      ; Проміжний результат чисельника (long double)  
+    kytaecVVTok32_tempDenominator     dt ?      ; Проміжний результат знаменника (long double)
+    kytaecVVTok32_resultDouble        dq ?      ; Кінцевий результат (double)  
+    kytaecVVTok32_denominatorValid    dd ?
+    kytaecVVTok32_logValid            dd ?
 
 .data
-    inputA dq 2.5, 1.5, 0.5, 0.1, 7.5, -1.1
-    inputB dq 1.2, 3.5, 2.5, 0.7, 2.2, 2.1
-    inputC dq 0.8, 2.6, 0.1, 0.3, 9.6, 0.25
-    inputD dq 0.4, 6.3, 0.6, 5.5, 3.3, 3.7
+    kytaecVVTok32_inputA dq 2.5, 1.5, 0.5, 0.1, 7.5, -1.1
+    kytaecVVTok32_inputB dq 1.2, 3.5, 2.5, 0.7, 2.2, 2.1
+    kytaecVVTok32_inputC dq 0.8, 2.6, 0.1, 0.3, 9.6, 0.25
+    kytaecVVTok32_inputD dq 0.4, 6.3, 0.6, 5.5, 3.3, 3.7
 
-    windowTitle db "Lab 5. Floating Point Calculations. Var-22", 0
-    messageFormat db "Expression: (ln(a + 4*c) - 1) / (3*b - 2*d)", 10, 10,
+    kytaecVVTok32_windowTitle db "Lab 6. Tokovenko IM-32. Var-22", 0
+    kytaecVVTok32_messageFormat db "Expression: (ln(a + 4*c) - 1) / (3*b - 2*d)", 10, 10,
                  "Value of a: %s", 10,
                  "Value of b: %s", 10,
                  "Value of c: %s", 10,
                  "Value of d: %s", 10, 10,
-                 "Formula with values:", 10,
                  "(ln(%s + 4*%s) - 1)", 10,
                  "------------------------", 10,
                  "(3*%s - 2*%s)", 10, 10,
                  "Result: %s", 0
-    zeroDenominatorMsg db "Error: Division by zero (3*b - 2*d = 0)", 0
-    logErrorMsg db "Error: Invalid logarithm argument (a + 4*c <= 0)", 0
-    bothErrorsMsg db "Error: Both division by zero and invalid logarithm", 0
+    kytaecVVTok32_zeroDenominatorMsg db "Error: Division by zero (3*b - 2*d = 0)", 0
+    kytaecVVTok32_logErrorMsg db "Error: Invalid logarithm argument (a + 4*c <= 0)", 0
+    kytaecVVTok32_bothErrorsMsg db "Error: Both division by zero and invalid logarithm", 0
 
-    iteration dd 0
-    strA db 64 dup(?)
-    strB db 64 dup(?)
-    strC db 64 dup(?)
-    strD db 64 dup(?)
-    strResult db 64 dup(?)
+    kytaecVVTok32_iteration dd 0
+    kytaecVVTok32_strA db 64 dup(?)
+    kytaecVVTok32_strB db 64 dup(?)
+    kytaecVVTok32_strC db 64 dup(?)
+    kytaecVVTok32_strD db 64 dup(?)
+    kytaecVVTok32_strResult db 64 dup(?)
 
-    one      real8 1.0
-    two      real8 2.0
-    three    real8 3.0
-    four     real8 4.0
-    epsilon  real8 1.0e-10
+    kytaecVVTok32_one      real8 1.0
+    kytaecVVTok32_two      real8 2.0
+    kytaecVVTok32_three    real8 3.0
+    kytaecVVTok32_four     real8 4.0
+    kytaecVVTok32_epsilon  real8 1.0e-10
 
 .code
 start:
-    mov esi, [iteration]
+    mov esi, [kytaecVVTok32_iteration]
 
 calculationLoop:
     finit
-    mov [denominatorValid], 1
-    mov [logValid], 1
+    mov [kytaecVVTok32_denominatorValid], 1
+    mov [kytaecVVTok32_logValid], 1
 
     ; Обчислення знаменника (3*b - 2*d)
-    fld qword ptr [inputB + 8*esi]   ; Завантажуємо b
-    fmul [three]                     ; 3*b
-    fld qword ptr [inputD + 8*esi]   ; Завантажуємо d
-    fmul [two]                       ; 2*d
-    fsubp st(1), st(0)               ; 3*b - 2*d
-    fstp tbyte ptr [tempDenominator] ; Зберігаємо у long double
+    fld qword ptr [kytaecVVTok32_inputB + 8*esi]   
+    fmul [kytaecVVTok32_three]                     
+    fld qword ptr [kytaecVVTok32_inputD + 8*esi]   
+    fmul [kytaecVVTok32_two]                       
+    fsubp st(1), st(0)                             
+    fstp tbyte ptr [kytaecVVTok32_tempDenominator]
 
-    ; Перевірка на нуль (з урахуванням точності)
-    fld tbyte ptr [tempDenominator]
+    ; Перевірка на нуль
+    fld tbyte ptr [kytaecVVTok32_tempDenominator]
     fabs
-    fcomp [epsilon]
+    fcomp [kytaecVVTok32_epsilon]
     fstsw ax
     sahf
     jb denominator_zero
 
     ; Перевірка аргументу логарифма (a + 4*c)
-    fld qword ptr [inputC + 8*esi]   ; Завантажуємо c
-    fmul [four]                      ; 4*c
-    fadd qword ptr [inputA + 8*esi]  ; a + 4*c
-    ftst                             ; Перевіряємо, чи a + 4*c > 0
+    fld qword ptr [kytaecVVTok32_inputC + 8*esi]   
+    fmul [kytaecVVTok32_four]                      
+    fadd qword ptr [kytaecVVTok32_inputA + 8*esi]  
+    ftst                              
     fstsw ax
     sahf
     ja log_ok
-    mov [logValid], 0                ; Позначимо помилку логарифма
+    mov [kytaecVVTok32_logValid], 0
     jmp check_errors
 
 denominator_zero:
-    mov [denominatorValid], 0
-    fstp st(0)                      ; Очищаємо стек FPU
-    
-    ; Перевірка аргументу логарифма після виявлення нульового знаменника
-    fld qword ptr [inputC + 8*esi]   ; Завантажуємо c
-    fmul [four]                      ; 4*c
-    fadd qword ptr [inputA + 8*esi]  ; a + 4*c
-    ftst                             ; Перевіряємо, чи a + 4*c > 0
+    mov [kytaecVVTok32_denominatorValid], 0
+    fstp st(0)
+    fld qword ptr [kytaecVVTok32_inputC + 8*esi]
+    fmul [kytaecVVTok32_four]
+    fadd qword ptr [kytaecVVTok32_inputA + 8*esi]
+    ftst
     fstsw ax
     sahf
-    ja check_errors                  ; Якщо логарифм валідний, тільки помилка знаменника
-    mov [logValid], 0                ; Інакше - обидві помилки
+    ja check_errors
+    mov [kytaecVVTok32_logValid], 0
     jmp check_errors
 
 log_ok:
-    ; Обчислення чисельника (ln(a + 4*c) - 1)
-    fld qword ptr [inputC + 8*esi]
-    fmul [four]
-    fadd qword ptr [inputA + 8*esi]
-    fldln2                           ; ln(2)
-    fxch                             ; Міняємо місцями st(0) і st(1)
-    fyl2x                            ; ln(a + 4*c) = ln(2) * log2(a + 4*c)
-    fsub [one]                       ; ln(a + 4*c) - 1
-    fstp tbyte ptr [tempNumerator]   ; Зберігаємо у long double
+    fld qword ptr [kytaecVVTok32_inputC + 8*esi]
+    fmul [kytaecVVTok32_four]
+    fadd qword ptr [kytaecVVTok32_inputA + 8*esi]
+    fldln2
+    fxch
+    fyl2x
+    fsub [kytaecVVTok32_one]
+    fstp tbyte ptr [kytaecVVTok32_tempNumerator]
 
-    ; Ділення чисельника на знаменник
-    fld tbyte ptr [tempNumerator]    ; Завантажуємо чисельник
-    fld tbyte ptr [tempDenominator]  ; Завантажуємо знаменник
-    fdivp st(1), st(0)               ; Ділимо numerator / denominator
-    fstp qword ptr [resultDouble]    ; Зберігаємо результат у double
+    fld tbyte ptr [kytaecVVTok32_tempNumerator]
+    fld tbyte ptr [kytaecVVTok32_tempDenominator]
+    fdivp st(1), st(0)
+    fstp qword ptr [kytaecVVTok32_resultDouble]
 
-    ; Форматування результатів для виводу
-    invoke FloatToStr2, [inputA + 8*esi], addr strA
-    invoke FloatToStr2, [inputB + 8*esi], addr strB
-    invoke FloatToStr2, [inputC + 8*esi], addr strC
-    invoke FloatToStr2, [inputD + 8*esi], addr strD
-    invoke FloatToStr2, [resultDouble], addr strResult
+    invoke FloatToStr2, [kytaecVVTok32_inputA + 8*esi], addr kytaecVVTok32_strA
+    invoke FloatToStr2, [kytaecVVTok32_inputB + 8*esi], addr kytaecVVTok32_strB
+    invoke FloatToStr2, [kytaecVVTok32_inputC + 8*esi], addr kytaecVVTok32_strC
+    invoke FloatToStr2, [kytaecVVTok32_inputD + 8*esi], addr kytaecVVTok32_strD
+    invoke FloatToStr2, [kytaecVVTok32_resultDouble], addr kytaecVVTok32_strResult
 
-    invoke wsprintf, addr outputBuffer, addr messageFormat,
-        addr strA, addr strB, addr strC, addr strD,
-        addr strA, addr strC,        ; Для формули: ln(a + 4*c)
-        addr strB, addr strD,        ; Для формули: 3*b - 2*d
-        addr strResult
+    invoke wsprintf, addr kytaecVVTok32_outputBuffer, addr kytaecVVTok32_messageFormat,
+        addr kytaecVVTok32_strA, addr kytaecVVTok32_strB, addr kytaecVVTok32_strC, addr kytaecVVTok32_strD,
+        addr kytaecVVTok32_strA, addr kytaecVVTok32_strC,
+        addr kytaecVVTok32_strB, addr kytaecVVTok32_strD,
+        addr kytaecVVTok32_strResult
 
     jmp showResult
 
 check_errors:
     finit
-    invoke FloatToStr2, [inputA + 8*esi], addr strA
-    invoke FloatToStr2, [inputB + 8*esi], addr strB
-    invoke FloatToStr2, [inputC + 8*esi], addr strC
-    invoke FloatToStr2, [inputD + 8*esi], addr strD
+    invoke FloatToStr2, [kytaecVVTok32_inputA + 8*esi], addr kytaecVVTok32_strA
+    invoke FloatToStr2, [kytaecVVTok32_inputB + 8*esi], addr kytaecVVTok32_strB
+    invoke FloatToStr2, [kytaecVVTok32_inputC + 8*esi], addr kytaecVVTok32_strC
+    invoke FloatToStr2, [kytaecVVTok32_inputD + 8*esi], addr kytaecVVTok32_strD
 
-    cmp [denominatorValid], 1
+    cmp [kytaecVVTok32_denominatorValid], 1
     je log_error_only
-    cmp [logValid], 1
+    cmp [kytaecVVTok32_logValid], 1
     je denominator_error_only
 
-    ; Якщо обидві помилки
-    invoke wsprintf, addr outputBuffer, addr messageFormat,
-        addr strA, addr strB, addr strC, addr strD,
-        addr strA, addr strC,
-        addr strB, addr strD,
-        addr bothErrorsMsg
+    invoke wsprintf, addr kytaecVVTok32_outputBuffer, addr kytaecVVTok32_messageFormat,
+        addr kytaecVVTok32_strA, addr kytaecVVTok32_strB, addr kytaecVVTok32_strC, addr kytaecVVTok32_strD,
+        addr kytaecVVTok32_strA, addr kytaecVVTok32_strC,
+        addr kytaecVVTok32_strB, addr kytaecVVTok32_strD,
+        addr kytaecVVTok32_bothErrorsMsg
     jmp showResult
 
 denominator_error_only:
-    invoke wsprintf, addr outputBuffer, addr messageFormat,
-        addr strA, addr strB, addr strC, addr strD,
-        addr strA, addr strC,
-        addr strB, addr strD,
-        addr zeroDenominatorMsg
+    invoke wsprintf, addr kytaecVVTok32_outputBuffer, addr kytaecVVTok32_messageFormat,
+        addr kytaecVVTok32_strA, addr kytaecVVTok32_strB, addr kytaecVVTok32_strC, addr kytaecVVTok32_strD,
+        addr kytaecVVTok32_strA, addr kytaecVVTok32_strC,
+        addr kytaecVVTok32_strB, addr kytaecVVTok32_strD,
+        addr kytaecVVTok32_zeroDenominatorMsg
     jmp showResult
 
 log_error_only:
-    invoke wsprintf, addr outputBuffer, addr messageFormat,
-        addr strA, addr strB, addr strC, addr strD,
-        addr strA, addr strC,
-        addr strB, addr strD,
-        addr logErrorMsg
+    invoke wsprintf, addr kytaecVVTok32_outputBuffer, addr kytaecVVTok32_messageFormat,
+        addr kytaecVVTok32_strA, addr kytaecVVTok32_strB, addr kytaecVVTok32_strC, addr kytaecVVTok32_strD,
+        addr kytaecVVTok32_strA, addr kytaecVVTok32_strC,
+        addr kytaecVVTok32_strB, addr kytaecVVTok32_strD,
+        addr kytaecVVTok32_logErrorMsg
 
 showResult:
-    invoke MessageBox, 0, addr outputBuffer, addr windowTitle, MB_OK
+    invoke MessageBox, 0, addr kytaecVVTok32_outputBuffer, addr kytaecVVTok32_windowTitle, MB_OK
 
-    ; Перехід до наступної ітерації
     inc esi
     cmp esi, 6
     jne calculationLoop
